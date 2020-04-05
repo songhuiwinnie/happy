@@ -1,0 +1,2 @@
+model_checkpoint_path: "word2vect_sg"
+all_model_checkpoint_paths: "word2vect_sg"
