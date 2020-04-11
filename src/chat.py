@@ -2,6 +2,7 @@
 from flask import Flask, render_template, request, jsonify
 from src.response import get_response, find_dates, find_places
 from src.initialize import initialize
+from src.response import COUNTRIES
 import flask_sijax
 import os
 
@@ -28,10 +29,16 @@ def query():
     return jsonify(response)
 
 
+@app.route("/api/countries")
+def countries():
+    response = dict(countries=COUNTRIES)
+    return jsonify(response)
+
+
 # Load chatting page
 @app.route('/')
 def index():
     return render_template('chat.html')
 
 
-app.run(debug=False)
+app.run(debug=False, port=8888)
