@@ -742,7 +742,6 @@ Website: http://emilcarlsson.se/
 			<button class="submit"><i class="fa fa-paper-plane" aria-hidden="true"></i></button>
 			</div>
 		</div>
-		<div id="result"></div>
 	</div>
 </div>
 <script src='//production-assets.codepen.io/assets/common/stopExecutionOnTimeout-b2a7b3fe212eaa732349046d8416e00a9dec26eb7fd347590fbced3ab38af52e.js'></script><script src='https://code.jquery.com/jquery-2.2.4.min.js'></script>
@@ -801,7 +800,6 @@ function newMessage_user(message) {
 };
 
 function newMessage_bot(message) {
-
 	if($.trim(message) == '') {
 		return false;
 	}
@@ -811,25 +809,23 @@ function newMessage_bot(message) {
 	$(".messages").animate({ scrollTop: $(document).height() }, "fast");
 };
 
-function fillForm(dates, places) {
-  if (typeof(Storage) !== "undefined") {
-	if (sessionStorageBegin) {
-
-	} else {
-	  sessionStorageBegin = 1;
+function newTicketMessage_bot(message, indication) {
+	if($.trim(message) == '') {
+		return false;
 	}
-   	document.getElementById("result").innerHTML = dates + places;
-  } else {
-    document.getElementById("result").innerHTML = "Sorry, your browser does not support web storage...";
-  }
-}
+	if (!indication) {
+		return false;
+	}
+	$('<li class="replies"><img src="../static/img/agent.jpg" alt="" /><p>Your ticket info is <a href="'+ message +'">here</a></p></li>').appendTo($('.messages ul'));
+	$('.message-input input').val(null);
+	$('.contact.active .preview').html('<span>You: </span>' + message);
+	$(".messages").animate({ scrollTop: $(document).height() }, "fast");
+};
 
 $("#personality").on("change", function(){
 	var personality = $("#personality").val();
 	alert("Changing personality to " + personality);
 });
-
-
 
 $(window).on('keydown', function(e) {
   if (e.which == 13) {
@@ -848,7 +844,7 @@ $(window).on('keydown', function(e) {
             console.log('get info');
             console.log(response);
 			newMessage_bot(response.msg);
-			fillForm(response.dates, response.places);
+			newTicketMessage_bot(response.ticket_msg, response.indication);
 			tts(response.msg);
 			$(".messages").scrollTo(0,document.body.scrollHeight);
         }
@@ -860,4 +856,7 @@ $(window).on('keydown', function(e) {
 //# sourceURL=pen.js
 </script>
 <select id="select_language" onchange="updateCountry()" style="display:none;"></select>
+<!--<form action = "http://localhost:5000/result">
+	<p><input type = "submit" value = "Ending Dialogue" /></p>
+</form>-->
 </body></html>

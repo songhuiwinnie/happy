@@ -34,6 +34,7 @@ from nltk.stem.porter import *
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
+from datetime import date
 
 path = os.path.join('.', os.path.dirname(__file__), 'static/js/sijax/')
 app = Flask(__name__)
@@ -204,7 +205,6 @@ class PrepUtils:
         q = PrepUtils.get_question_vector(question, max_len, wv_model)
         a_out = PrepUtils.get_answer_vector(['_B_'] + [answer], word_dict_a)
         a_target = PrepUtils.get_answer_vector([answer] + ['_E_'], word_dict_a, convert_index=False)
-        print("huiwen debug2: ", q, ", ", a_out, ", ", a_target)
         return q, a_out, a_target
 
 
@@ -372,7 +372,6 @@ class Seq2SeqDatasetReader(AirdialogueDataset):
     def resume_answer_dict():
         global WORD_DICT_A_PATH
         word_dict_a = {}
-        print('huiwen debug: ', WORD_DICT_A_PATH)
         # for p in PersonalityDataset.PERSONALITIES:
         #     file_path = '%s_%s' % (WORD_DICT_A_PATH, p)
         assert os.path.isfile(WORD_DICT_A_PATH), True
@@ -553,7 +552,6 @@ class Seq2SeqModel:
     # Answer the question using the trained seq2seq model
     def answer(self, sentence, wv_model):
         qa_seq = (PrepUtils.preprocess_text(sentence), '_U_')
-        print("debug in Seq2SeqModel answer qa_seq", qa_seq)
         input_batch, output_batch, target_batch = PrepUtils.sequence_to_vectors(
             qa_seq, self.input_max_len, wv_model, self.word_dict_a)
         prediction = tf.argmax(self.model, 2)
@@ -638,14 +636,14 @@ def init():
 
     # enable this to load the model saved on Google Drive
     # disable to load model you trained using previous code
-    # (model saved on your google drive root/jigu6612)
+    # (model saved on your google drive root/models)
     LOAD_GDRIVE_MODEL = True
 
     # Please do not modify these
     ####################################################
     MODEL_GDRIVE_ID = '1F-x_ylxEV7rAKRtb7yLUX_fZzZWSw5y5'
     PATH_GDRIVE_ROOT = '/content/gdrive/My Drive'
-    FILES_ROOT = '%s/jigu6612' % ('..' if LOAD_GDRIVE_MODEL else PATH_GDRIVE_ROOT)
+    FILES_ROOT = '%s/models' % ('..' if LOAD_GDRIVE_MODEL else PATH_GDRIVE_ROOT)
 
     WORD_DICT_ROOT = '%s/word_dict' % FILES_ROOT
     WV_MODEL_ROOT = '%s/wv_model' % FILES_ROOT
@@ -656,7 +654,7 @@ def init():
     WORD_DICT_Q_PATH = '%s/word_dict_q' % WORD_DICT_ROOT
     WV_MODEL_PATH = '%s/word2vect_sg' % WV_MODEL_ROOT
     SEQ_MODEL_PATH = '%s/seq2seq' % SEQ_MODEL_ROOT
-    CHAT_LOG_PATH = '%s/jigu6612/chat_log.txt' % PATH_GDRIVE_ROOT
+    CHAT_LOG_PATH = '%s/models/chat_log.txt' % PATH_GDRIVE_ROOT
     ####################################################
 
     #WV
@@ -673,7 +671,7 @@ def init():
 
     #downloadmodelsfromgoogledrivefirst
 
-    ops.reset_default_graph()
+    tf.reset_default_graph()
 
     session=tf.Session()
 
@@ -686,6 +684,8 @@ def init():
     #recordedfromtraining,maxlengthofquestionforall
     #threedatasetsare12:
     MAX_LEN_Q=12
+    global items
+    items = {}
 
     #resumeworddictforanswers(onehotlookup)
     #changetheload_modeltotraintotrainthemodel
@@ -701,7 +701,6 @@ def init():
 def get_response(user_in):
     print("----------debug in get response-------")
     global seq2seq_models, wv_model
-    print("huiwen",seq2seq_models)
     response = seq2seq_models.answer(user_in, wv_model=wv_model)
     return response
 
@@ -712,25 +711,67 @@ def get_response(user_in):
 #     br.form['from'] = 'Enter your Name'
 #     br.form['to'] = 'Enter your Title'
 
+def createBrowserScript(items):
+    ids = ['fromcity', 'tocity', 'deparure', 'return']
+    id_path = os.path.join('.', os.path.dirname(__file__), 'static/js')
+    jslines = []
+    for k, v in items.items():
+        if k in ids:
+            jslines.append("document.getElementById('" + k + "').value = '" + v + "';\n")
+        else:
+            jslines.append("document.getElementById('" + k + "').checked = true;\n")
+
+    file_path = os.path.join(id_path, 'BrowserScript.js')
+
+    outF = open(file_path, 'w')
+    outF.writelines(jslines)
+    outF.close()
+    return outF
 
 '''------------------------------------------------------------------------------------------------------------------------------------'''
 
 # Chatting api
 @app.route("/api/response")
 def response():
-
     message = request.args.get('message')
     message = str(message)
     bot_response = get_response(message)
-    matched_dates =  datefinder.find_dates(bot_response)
-    e = extraction.Extractor(text=bot_response)
+    bot_response = bot_response
+    matched_dates =  datefinder.find_dates(message)
+    e = extraction.Extractor(text=message)
     e.find_entities()
     matched_places = e.places
+    complete = False
+    tag = True
+    ticket_link = "http://localhost:5000/result"
+    for flightDate in matched_dates:
+        # Adding a new key value pair
+        flightDate = flightDate.strftime("%m-%d-%y")
+        if (tag):
+            items.update({'deparure': flightDate})
+            tag = False
+        else:
+            items.update({'return': flightDate})
+            tag = True
+    for place in matched_places:
+        # Adding a new key value pair
+        if (tag):
+            items.update({'fromcity': place})
+            tag = False
+        else:
+            items.update({'tocity': place})
+            tag = True
+    createBrowserScript(items)
+    if len(items) == 4:
+        complete = True
+    print("huiwen debug:", items)
     info = {
        "input" : message,
        "msg" : bot_response,
-       "dates" : list(matched_dates),
-       "places" : list(matched_places)
+       "ticket_msg": ticket_link,
+       "indication": complete
+       # "dates" : list(matched_dates),
+       # "places" : list(matched_places)
     }
     return jsonify(info)
 
@@ -739,9 +780,14 @@ def response():
 def index():
     return render_template('chat.html')
 
+#, methods = ['POST', 'GET']
+@app.route('/result')
+def result():
+    return render_template("index.html")
 
+    
 # Main entry
 if __name__ == '__main__':
     init()
     print("----------debug in main entry-------")
-    app.run(debug=False, port=8080, host='0.0.0.0')
+    app.run(debug=False)
