@@ -13,54 +13,113 @@
     <link rel="stylesheet" href="../static/css/chat.css">
 </head>
 <body>
-    <div id="frame">
-        <div class="content">
-            <div class="contact-profile">
-                <div class="row">
-                    <div class="col-md-1">
-                        <img src="../static/img/agent.jpg" alt=""/>
+    <div id="app" class="row">
+        <div class="col-md-7 body">
+            <div id="frame">
+                <div class="content">
+                    <div class="contact-profile">
+                        <div class="row">
+                            <div class="col-md-1">
+                                <img src="../static/img/agent.jpg" alt=""/>
+                            </div>
+                            <div class="col-md-11">
+                                <p class="title">Flight Reservation Chatbot</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-11">
-                        <p class="title">Flight Reservation Chatbot</p>
+                    <div class="messages">
+                        <ul>
+                            <template v-for="(item, index) in messages">
+                                <li class="replies" v-if="item.is_system">
+                                    <img src="../static/img/agent.jpg" alt=""/>
+                                    <p v-text="item.message"></p>
+                                </li>
+                                <li class="sent" v-if="!item.is_system">
+                                    <img src="../static/img/user.png" alt=""/>
+                                    <p v-text="item.message"></p>
+                                </li>
+
+                            </template>
+                        </ul>
+                    </div>
+                    <div class="message-input">
+                        <div class="wrap">
+                            <input id="input-field" type="text" placeholder="Write your message..." v-model="message" @keydown.enter="sendMessage" />
+                            <button class="submit" @click="sendMessage"><i class="fa fa-paper-plane" aria-hidden="true"></i></button>
+                        </div>
                     </div>
                 </div>
             </div>
-        <div class="messages">
-            <ul>
-                <template v-for="(item, index) in messages">
-                    <li class="replies" v-if="item.is_system">
-                        <img src="../static/img/agent.jpg" alt=""/>
-                        <p v-text="item.message"></p>
-                    </li>
-                    <li class="sent" v-if="!item.is_system">
-                        <img src="../static/img/user.png" alt=""/>
-                        <p v-text="item.message"></p>
-                    </li>
-
-                </template>
-            </ul>
         </div>
-        <div class="message-input">
-            <div class="wrap">
-                <input id="input-field" type="text" placeholder="Write your message..." v-model="message" @keydown.enter="sendMessage" />
-                <button class="submit" @click="sendMessage"><i class="fa fa-paper-plane" aria-hidden="true"></i></button>
+        <div class="col-md-4 body">
+            <div class="submit-form">
+                <h4>Check availability for <em>direction</em>:</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <fieldset>
+                            <label for="from">From:</label>
+                            <select id="from" v-model="form.place_from">
+                                <option value="">Select a location...</option>
+                                <option :key="index" :value="item" v-text="item" v-for="(item, index) in response.countries"></option>
+                            </select>
+                        </fieldset>
+                    </div>
+                    <div class="col-md-6">
+                        <fieldset>
+                            <label for="to">To:</label>
+                            <select id="to" v-model="form.place_to">
+                                <option value="">Select a location...</option>
+                                <option :key="index" :value="item" v-text="item" v-for="(item, index) in response.countries"></option>
+                            </select>
+                        </fieldset>
+                    </div>
+                    <div class="col-md-6">
+                        <fieldset>
+                            <label for="departure">Departure date:</label>
+                            <input type="text" id="departure"  name="departure-date" class="form-control date" placeholder="Departure Date" v-model="form.date_departure">
+                        </fieldset>
+                    </div>
+                    <div class="col-md-6">
+                        <fieldset>
+                            <label for="return">Return date:</label>
+                            <input type="text" id="return" name="return-date" class="form-control date" placeholder="Return Date" v-model="form.date_return">
+                        </fieldset>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="radio-select">
+                            <div class="row">
+                                <div class="col-md-6 col-sm-6 col-xs-6">
+                                    <label for="round">Round</label>
+                                    <input type="radio" id="round"  name="trip" value="round" required="required">
+                                </div>
+                                <div class="col-md-6 col-sm-6 col-xs-6">
+                                    <label for="one">One-way</label>
+                                    <input type="radio" id="one"  name="trip" value="one" required="required">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <fieldset>
+                            <button id="submit-btn" type="button"  class="btn">Order Ticket Now</button>
+                        </fieldset>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
-
-<script type="text/javascript" src='https://code.jquery.com/jquery-2.2.4.min.js'></script>
-<script type="text/javascript" src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="../static/js/sijax/sijax.js"></script>
-<script type="text/javascript" src="../static/js/speech.js"></script>
-<script type="text/javascript" src="https://use.typekit.net/hoy3lrg.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<script type="text/javascript" src="../static/js/chatbot.js"></script>
-<script type="text/javascript">
-    {{ g.sijax.get_js()|safe }}
-	try{Typekit.load({ async: true });}catch(e){}
-</script>
+    <script type="text/javascript" src='https://code.jquery.com/jquery-2.2.4.min.js'></script>
+    <script type="text/javascript" src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../static/js/sijax/sijax.js"></script>
+    <script type="text/javascript" src="../static/js/speech.js"></script>
+    <script type="text/javascript" src="https://use.typekit.net/hoy3lrg.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script type="text/javascript" src="../static/js/chatbot.js"></script>
+    <script type="text/javascript">
+        {{ g.sijax.get_js()|safe }}
+        try{Typekit.load({ async: true });}catch(e){}
+    </script>
 <!--<script src='//production-assets.codepen.io/assets/editor/live/console_runner-079c09a0e3b9ff743e39ee2d5637b9216b3545af0de366d4b9aad9dc87e26bfd.js'></script>-->
 <!--<script src='//production-assets.codepen.io/assets/editor/live/events_runner-73716630c22bbc8cff4bd0f07b135f00a0bdc5d14629260c3ec49e5606f98fdd.js'></script>-->
 <!--<script src='//production-assets.codepen.io/assets/editor/live/css_live_reload_init-2c0dc5167d60a5af3ee189d570b1835129687ea2a61bee3513dee3a50c115a77.js'></script>-->
