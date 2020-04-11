@@ -40,8 +40,7 @@ class PrepUtility:
     @staticmethod
     def handle_contractions(text):
         # fix strength apostrophe
-        text = text.replace('’', "'")
-        text = text.replace('”', '"')
+        text = text.replace('’', "'").replace('”', '"')
 
         # common English contractions from Lab05
         contraction_dict = {"ain't": "is not", "aren't": "are not", "can't": "cannot", "'cause": "because",
