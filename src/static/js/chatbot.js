@@ -55,6 +55,7 @@ var app = new Vue({
                 }).then((response) => {
                     this.messages.push({"message": response.data.message, "is_system": true, "is_link": response.data.is_link});
                     $(".messages").animate({ scrollTop: $(document).height() }, "fast");
+                    tts(response.data.message);
                     this.bindPlace(response.data);
                     this.bindDate(response.data);
                 });

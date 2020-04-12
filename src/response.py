@@ -7,6 +7,7 @@ COUNTRIES = ["New York", "Cambodia", "Hong Kong", "India", "Japan", "Korea", "La
 
 
 def get_response(user_in, seq2seq_models, wv_model):
+    print("user in = ", user_in)
     return seq2seq_models.answer(user_in, wv_model=wv_model)
 
 

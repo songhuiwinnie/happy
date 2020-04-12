@@ -14,9 +14,6 @@ app.config['SIJAX_JSON_URI'] = '../static/js/sijax/json2.js'
 flask_sijax.Sijax(app)
 
 
-seq2seq_models, wv_model = initialize()
-
-
 # Chatting api
 @app.route("/api/query")
 def query():
@@ -41,4 +38,6 @@ def index():
     return render_template('chat.html')
 
 
-app.run(debug=False, port=8888)
+if __name__ == "__main__":
+    seq2seq_models, wv_model = initialize()
+    app.run(debug=False, port=8888)
