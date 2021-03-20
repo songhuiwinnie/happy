@@ -41,7 +41,7 @@ html2text==2018.1.9
 httplib2==0.12.3
 idna==2.8
 itsdangerous==1.1.0
-Jinja2==2.10.1
+Jinja2==2.11.3
 jmespath==0.9.4
 joblib==0.13.2
 Keras==2.2.4
